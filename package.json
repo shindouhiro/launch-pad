@@ -2,11 +2,13 @@
   "name": "launch-pad-monorepo",
   "private": true,
   "scripts": {
+    "dev": "turbo run dev --parallel",
     "dev:portal": "pnpm --filter portal dev",
     "dev:admin": "pnpm --filter admin dev",
     "dev:backend": "pnpm --filter backend start:dev"
   },
   "devDependencies": {
     "turbo": "latest"
-  }
+  },
+  "packageManager": "pnpm@8.15.4"
 }

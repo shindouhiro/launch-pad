@@ -1,0 +1,178 @@
+"use client";
+
+import { ActionType, ProColumns, ProTable } from "@ant-design/pro-components";
+import { Button, Popconfirm, App, ConfigProvider } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { useRef } from "react";
+
+type RecommendationItem = {
+  id: string;
+  title: string;
+  url: string;
+  icon: string;
+  category: string;
+  description: string;
+};
+
+export default function RecommendationsPage() {
+  const actionRef = useRef<ActionType>(null);
+  const { message } = App.useApp();
+
+  const columns: ProColumns<RecommendationItem>[] = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      formItemProps: {
+        rules: [{ required: true, message: "Title is required" }],
+      },
+    },
+    {
+      title: "URL",
+      dataIndex: "url",
+      valueType: "text",
+      formItemProps: {
+        rules: [{ required: true, message: "URL is required" }],
+      },
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      valueType: "select",
+      valueEnum: {
+        Development: { text: "Development", status: "Processing" },
+        Productivity: { text: "Productivity", status: "Success" },
+        Social: { text: "Social", status: "Warning" },
+        Entertainment: { text: "Entertainment", status: "Error" },
+      },
+      formItemProps: {
+        rules: [{ required: true, message: "Category is required" }],
+      },
+    },
+    {
+      title: "Icon (Emoji)",
+      dataIndex: "icon",
+      width: 100,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      valueType: "textarea",
+      hideInSearch: true,
+    },
+    {
+      title: "Actions",
+      valueType: "option",
+      render: (text, record, _, action) => [
+        <a
+          key="editable"
+          onClick={() => {
+            action?.startEditable?.(record.id);
+          }}
+        >
+          Edit
+        </a>,
+        <Popconfirm
+          key="delete"
+          title="Are you sure?"
+          onConfirm={async () => {
+            const token = localStorage.getItem("token");
+            await fetch(`http://localhost:3001/recommendations/${record.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            message.success("Deleted successfully");
+            actionRef.current?.reload();
+          }}
+        >
+          <a style={{ color: "red" }}>Delete</a>
+        </Popconfirm>,
+      ],
+    },
+  ];
+
+  return (
+    <ConfigProvider>
+      <ProTable<RecommendationItem>
+        key="recommendations-table"
+        columns={columns}
+        actionRef={actionRef}
+        cardBordered
+        request={async () => {
+          const response = await fetch("http://localhost:3001/recommendations");
+          const data = await response.json();
+          return {
+            data: data,
+            success: true,
+          };
+        }}
+        editable={{
+          type: "multiple",
+          onSave: async (key, row) => {
+            const token = localStorage.getItem("token");
+
+            try {
+              if (row.id && !row.id.toString().startsWith('temp')) {
+                await fetch(`http://localhost:3001/recommendations/${row.id}`, {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify(row),
+                });
+              } else {
+                await fetch(`http://localhost:3001/recommendations`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify(row),
+                });
+              }
+
+              message.success("Saved successfully");
+              actionRef.current?.reload();
+            } catch (error) {
+              message.error("Save failed");
+            }
+          },
+        }}
+        columnsState={{
+          persistenceKey: "pro-table-singe-demos",
+          persistenceType: "localStorage",
+        }}
+        rowKey="id"
+        search={{
+          labelWidth: "auto",
+        }}
+        options={{
+          setting: {
+            listsHeight: 400,
+          },
+        }}
+        pagination={{
+          pageSize: 10,
+        }}
+        dateFormatter="string"
+        headerTitle="Recommendation List"
+        toolBarRender={() => [
+          <Button
+            key="button"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              actionRef.current?.addEditRecord?.({
+                id: `temp-${Date.now()}`,
+              });
+            }}
+            type="primary"
+          >
+            New
+          </Button>,
+        ]}
+      />
+    </ConfigProvider>
+  );
+}

@@ -1,0 +1,61 @@
+{
+  "common": {
+    "search": "Search apps...",
+    "all": "All",
+    "productivity": "Productivity",
+    "development": "Development",
+    "social": "Social",
+    "entertainment": "Entertainment"
+  },
+  "home": {
+    "title": "Launch Pad",
+    "subtitle": "Your personal command center. Access all your favorite tools and apps in one beautiful interface.",
+    "noApps": "No apps found matching your criteria."
+  },
+  "admin": {
+    "title": "Launch Pad Admin",
+    "subtitle": "Manage your launch pad apps",
+    "login": "Account Login",
+    "username": "Username",
+    "password": "Password",
+    "usernamePlaceholder": "Username: admin",
+    "passwordPlaceholder": "Password: admin123",
+    "usernameRequired": "Please enter username!",
+    "passwordRequired": "Please enter password!",
+    "loginSuccess": "Login successful!",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "loginError": "An error occurred. Please try again.",
+    "logout": "Logout",
+    "recommendations": "Recommendations"
+  },
+  "recommendations": {
+    "title": "Recommendation Management",
+    "new": "New Recommendation",
+    "edit": "Edit Recommendation",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure to delete?",
+    "yes": "Yes",
+    "no": "No",
+    "icon": "Icon",
+    "titleField": "Title",
+    "url": "URL",
+    "category": "Category",
+    "description": "Description",
+    "actions": "Actions",
+    "titlePlaceholder": "Enter title",
+    "urlPlaceholder": "https://example.com",
+    "categoryPlaceholder": "Select category",
+    "iconPlaceholder": "🚀",
+    "descriptionPlaceholder": "Enter description",
+    "titleRequired": "Please input title!",
+    "urlRequired": "Please input URL!",
+    "urlInvalid": "Please enter a valid URL!",
+    "categoryRequired": "Please select category!",
+    "fetchFailed": "Failed to fetch data",
+    "deleteSuccess": "Deleted successfully",
+    "deleteFailed": "Delete failed",
+    "updateSuccess": "Updated successfully",
+    "createSuccess": "Created successfully",
+    "saveFailed": "Save failed"
+  }
+}

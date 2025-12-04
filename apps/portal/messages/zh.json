@@ -1,0 +1,61 @@
+{
+  "common": {
+    "search": "搜索应用...",
+    "all": "全部",
+    "productivity": "生产力",
+    "development": "开发",
+    "social": "社交",
+    "entertainment": "娱乐"
+  },
+  "home": {
+    "title": "启动台",
+    "subtitle": "您的个人指挥中心。在一个精美的界面中访问所有您喜爱的工具和应用。",
+    "noApps": "未找到符合条件的应用。"
+  },
+  "admin": {
+    "title": "启动台管理",
+    "subtitle": "管理您的启动台应用",
+    "login": "账号登录",
+    "username": "用户名",
+    "password": "密码",
+    "usernamePlaceholder": "用户名: admin",
+    "passwordPlaceholder": "密码: admin123",
+    "usernameRequired": "请输入用户名！",
+    "passwordRequired": "请输入密码！",
+    "loginSuccess": "登录成功！",
+    "loginFailed": "登录失败，请检查您的凭据。",
+    "loginError": "发生错误，请重试。",
+    "logout": "退出登录",
+    "recommendations": "推荐管理"
+  },
+  "recommendations": {
+    "title": "推荐管理",
+    "new": "新建推荐",
+    "edit": "编辑推荐",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除吗？",
+    "yes": "是",
+    "no": "否",
+    "icon": "图标",
+    "titleField": "标题",
+    "url": "链接",
+    "category": "分类",
+    "description": "描述",
+    "actions": "操作",
+    "titlePlaceholder": "输入标题",
+    "urlPlaceholder": "https://example.com",
+    "categoryPlaceholder": "选择分类",
+    "iconPlaceholder": "🚀",
+    "descriptionPlaceholder": "输入描述",
+    "titleRequired": "请输入标题！",
+    "urlRequired": "请输入链接！",
+    "urlInvalid": "请输入有效的链接！",
+    "categoryRequired": "请选择分类！",
+    "fetchFailed": "获取数据失败",
+    "deleteSuccess": "删除成功",
+    "deleteFailed": "删除失败",
+    "updateSuccess": "更新成功",
+    "createSuccess": "创建成功",
+    "saveFailed": "保存失败"
+  }
+}

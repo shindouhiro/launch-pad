@@ -20,7 +20,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RecommendationsService } from './recommendations.service';
-import { Recommendation } from './recommendation.entity';
+import { RecommendationEntity } from './recommendation.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { QiniuService } from '../qiniu/qiniu.service';
 
@@ -34,8 +34,8 @@ export class RecommendationsController {
 
   @Get()
   @ApiOperation({ summary: '获取所有推荐', description: '获取推荐列表，无需认证' })
-  @ApiResponse({ status: 200, description: '成功返回推荐列表', type: [Recommendation] })
-  findAll(): Recommendation[] {
+  @ApiResponse({ status: 200, description: '成功返回推荐列表', type: [RecommendationEntity] })
+  async findAll(): Promise<RecommendationEntity[]> {
     return this.recommendationsService.findAll();
   }
 
@@ -63,16 +63,21 @@ export class RecommendationsController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: '创建成功', type: Recommendation })
+  @ApiResponse({ status: 201, description: '创建成功', type: RecommendationEntity })
   @ApiResponse({ status: 401, description: '未授权' })
   async create(
-    @Body() recommendation: Omit<Recommendation, 'id'>,
+    @Body() recommendation: Omit<RecommendationEntity, 'id' | 'createdAt' | 'updatedAt'>,
     @UploadedFiles() files?: Express.Multer.File[],
-  ): Promise<Recommendation> {
+  ): Promise<RecommendationEntity> {
     // 如果有上传的图片，先上传到七牛云
     if (files && files.length > 0) {
       const uploadResults = await this.qiniuService.uploadFiles(files);
       recommendation.images = uploadResults.map((result) => result.url);
+
+      // 自动将第一张图片设为封面
+      if (!recommendation.coverImage && recommendation.images.length > 0) {
+        recommendation.coverImage = recommendation.images[0];
+      }
     }
 
     return this.recommendationsService.create(recommendation);
@@ -102,26 +107,46 @@ export class RecommendationsController {
       },
     },
   })
-  @ApiResponse({ status: 200, description: '更新成功', type: Recommendation })
+  @ApiResponse({ status: 200, description: '更新成功', type: RecommendationEntity })
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 404, description: '推荐不存在' })
   async update(
     @Param('id') id: string,
-    @Body() updateData: Partial<Recommendation>,
+    @Body() updateData: Partial<RecommendationEntity> & { existingImages?: string },
     @UploadedFiles() files?: Express.Multer.File[],
-  ): Promise<Recommendation | null> {
+  ): Promise<RecommendationEntity | null> {
+    const existingRecommendation = await this.recommendationsService.findOne(id);
+
+    // 处理现有图片（前端传来的保留图片列表）
+    let finalImages: string[] = [];
+    if (updateData.existingImages) {
+      try {
+        finalImages = JSON.parse(updateData.existingImages);
+        delete updateData.existingImages; // 删除临时字段
+      } catch (e) {
+        finalImages = existingRecommendation?.images || [];
+      }
+    } else {
+      finalImages = existingRecommendation?.images || [];
+    }
+
     // 如果有新上传的图片
     if (files && files.length > 0) {
       const uploadResults = await this.qiniuService.uploadFiles(files);
       const newImages = uploadResults.map((result) => result.url);
+      finalImages = [...finalImages, ...newImages];
+    }
 
-      // 合并新旧图片
-      const existingRecommendation = this.recommendationsService.findAll().find((r) => r.id === id);
-      if (existingRecommendation && existingRecommendation.images) {
-        updateData.images = [...existingRecommendation.images, ...newImages];
-      } else {
-        updateData.images = newImages;
-      }
+    updateData.images = finalImages;
+
+    // 如果没有设置封面，使用第一张图片
+    if (!updateData.coverImage && finalImages.length > 0) {
+      updateData.coverImage = finalImages[0];
+    }
+
+    // 如果封面图片不在图片列表中，清除封面
+    if (updateData.coverImage && !finalImages.includes(updateData.coverImage)) {
+      updateData.coverImage = finalImages[0] || undefined;
     }
 
     return this.recommendationsService.update(id, updateData);
@@ -136,7 +161,7 @@ export class RecommendationsController {
   @ApiResponse({ status: 404, description: '推荐不存在' })
   async delete(@Param('id') id: string): Promise<void> {
     // 删除推荐时，同时删除关联的图片
-    const recommendation = this.recommendationsService.findAll().find((r) => r.id === id);
+    const recommendation = await this.recommendationsService.findOne(id);
     if (recommendation && recommendation.images && recommendation.images.length > 0) {
       const keys = recommendation.images.map((url) => this.qiniuService.extractKeyFromUrl(url));
       await this.qiniuService.deleteFiles(keys);

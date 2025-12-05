@@ -7,6 +7,8 @@ export interface AppItem {
   icon: string;
   category: Category;
   description: string;
+  images?: string[];
+  coverImage?: string;
 }
 
 export const apps: AppItem[] = [

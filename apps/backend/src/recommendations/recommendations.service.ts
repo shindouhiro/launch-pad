@@ -1,48 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { Recommendation } from './recommendation.entity';
-import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { RecommendationEntity } from './recommendation.entity';
 
 @Injectable()
 export class RecommendationsService {
-  private recommendations: Recommendation[] = [
-    {
-      id: '1',
-      title: 'GitHub',
-      url: 'https://github.com',
-      icon: '🐙',
-      category: 'Development',
-      description: 'Code hosting and collaboration',
-    },
-    {
-      id: '2',
-      title: 'Vercel',
-      url: 'https://vercel.com',
-      icon: '▲',
-      category: 'Development',
-      description: 'Develop. Preview. Ship.',
-    },
-  ];
+  constructor(
+    @InjectRepository(RecommendationEntity)
+    private recommendationRepository: Repository<RecommendationEntity>,
+  ) { }
 
-  findAll(): Recommendation[] {
-    return this.recommendations;
+  async findAll(): Promise<RecommendationEntity[]> {
+    return this.recommendationRepository.find({
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  create(recommendation: Omit<Recommendation, 'id'>): Recommendation {
-    const newRecommendation = { id: uuidv4(), ...recommendation };
-    this.recommendations.push(newRecommendation);
-    return newRecommendation;
+  async findOne(id: string): Promise<RecommendationEntity | null> {
+    return this.recommendationRepository.findOne({ where: { id } });
   }
 
-  update(id: string, updateData: Partial<Recommendation>): Recommendation | null {
-    const index = this.recommendations.findIndex((r) => r.id === id);
-    if (index !== -1) {
-      this.recommendations[index] = { ...this.recommendations[index], ...updateData };
-      return this.recommendations[index];
-    }
-    return null;
+  async create(
+    recommendation: Partial<RecommendationEntity>,
+  ): Promise<RecommendationEntity> {
+    const newRecommendation = this.recommendationRepository.create(recommendation);
+    return this.recommendationRepository.save(newRecommendation);
   }
 
-  delete(id: string): void {
-    this.recommendations = this.recommendations.filter((r) => r.id !== id);
+  async update(
+    id: string,
+    updateData: Partial<RecommendationEntity>,
+  ): Promise<RecommendationEntity | null> {
+    await this.recommendationRepository.update(id, updateData);
+    return this.findOne(id);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.recommendationRepository.delete(id);
   }
 }

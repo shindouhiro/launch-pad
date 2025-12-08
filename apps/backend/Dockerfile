@@ -2,18 +2,15 @@
 FROM node:20-alpine AS builder
 
 # 安装 pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8
 
 WORKDIR /app
 
-# 复制 package.json 和 pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml* ./
-
-# 安装依赖
-RUN pnpm install --frozen-lockfile
-
-# 复制源代码
+# 复制所有文件
 COPY . .
+
+# 安装依赖（不使用 frozen-lockfile，因为是 monorepo）
+RUN pnpm install --no-frozen-lockfile
 
 # 构建应用
 RUN pnpm build
@@ -25,20 +22,28 @@ FROM node:20-alpine
 RUN apk add --no-cache curl
 
 # 安装 pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8
 
 WORKDIR /app
 
-# 从构建阶段复制必要文件
+# 复制 package.json
+COPY package.json ./
+
+# 只安装生产依赖
+RUN pnpm install --prod --no-frozen-lockfile
+
+# 从构建阶段复制构建产物
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
 # 暴露端口
 EXPOSE 3001
 
 # 设置环境变量
 ENV NODE_ENV=production
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
 
 # 启动应用
 CMD ["node", "dist/main.js"]

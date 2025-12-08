@@ -18,9 +18,6 @@ RUN pnpm build
 # 生产阶段
 FROM node:20-alpine
 
-# 安装 curl 用于健康检查
-RUN apk add --no-cache curl
-
 # 安装 pnpm
 RUN npm install -g pnpm@8
 
@@ -41,9 +38,9 @@ EXPOSE 3001
 # 设置环境变量
 ENV NODE_ENV=production
 
-# 健康检查
+# 健康检查（使用 wget，alpine 自带）
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/ || exit 1
 
 # 启动应用
 CMD ["node", "dist/main.js"]

@@ -12,14 +12,12 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const { recommendations: apps, loading: appsLoading } = useRecommendations();
-  const { categories: categoryList, loading: categoriesLoading } = useCategories();
+  const { recommendations: apps } = useRecommendations();
+  const { categories: categoryList } = useCategories();
 
   const categories = useMemo(() => {
     return ["All", ...categoryList.map(c => c.name)];
   }, [categoryList]);
-
-  const loading = appsLoading || categoriesLoading;
 
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {

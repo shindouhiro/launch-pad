@@ -8,14 +8,14 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
  */
 interface RequestConfig extends RequestInit {
   params?: Record<string, string | number | boolean>;
-  data?: any;
+  data?: unknown;
   timeout?: number;
 }
 
 /**
  * API 响应接口
  */
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   statusText: string;
@@ -27,9 +27,9 @@ interface ApiResponse<T = any> {
 class ApiError extends Error {
   status: number;
   statusText: string;
-  data?: any;
+  data?: unknown;
 
-  constructor(message: string, status: number, statusText: string, data?: any) {
+  constructor(message: string, status: number, statusText: string, data?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -52,7 +52,7 @@ function buildQueryString(params: Record<string, string | number | boolean>): st
 /**
  * 统一的 fetch 封装
  */
-async function request<T = any>(
+async function request<T = unknown>(
   url: string,
   config: RequestConfig = {}
 ): Promise<ApiResponse<T>> {

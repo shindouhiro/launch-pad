@@ -1,46 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Input, InputNumber, message, Popconfirm } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { categoryApi } from "@/apis";
 import { Category } from "@/apis/types";
 import { useTranslations } from "next-intl";
+import { useCategories, useModal, useFormHandler } from "@/hooks";
 
 export default function CategoriesPage() {
   const t = useTranslations("categories");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [form] = Form.useForm();
-
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const res = await categoryApi.getAll();
-      setCategories(res.data);
-    } catch (error) {
-      message.error(t("fetchFailed"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const { categories, loading, fetchCategories } = useCategories();
+  const modal = useModal<Category>();
+  const { form, resetForm, setFormValues, validateAndGetValues } = useFormHandler();
 
   const handleAdd = () => {
-    setEditingCategory(null);
-    form.resetFields();
-    setIsModalOpen(true);
+    resetForm();
+    modal.open();
   };
 
   const handleEdit = (record: Category) => {
-    setEditingCategory(record);
-    form.setFieldsValue(record);
-    setIsModalOpen(true);
+    setFormValues(record);
+    modal.open(record);
   };
 
   const handleDelete = async (id: string) => {
@@ -55,15 +35,15 @@ export default function CategoriesPage() {
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
-      if (editingCategory) {
-        await categoryApi.update(editingCategory.id, values);
+      const values = await validateAndGetValues();
+      if (modal.data) {
+        await categoryApi.update(modal.data.id, values);
         message.success(t("updateSuccess"));
       } else {
         await categoryApi.create(values);
         message.success(t("createSuccess"));
       }
-      setIsModalOpen(false);
+      modal.close();
       fetchCategories();
     } catch (error) {
       message.error(t("operationFailed"));
@@ -118,10 +98,10 @@ export default function CategoriesPage() {
       />
 
       <Modal
-        title={editingCategory ? t("editCategory") : t("addCategory")}
-        open={isModalOpen}
+        title={modal.data ? t("editCategory") : t("addCategory")}
+        open={modal.isOpen}
         onOk={handleSubmit}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={modal.close}
       >
         <Form form={form} layout="vertical">
           <Form.Item

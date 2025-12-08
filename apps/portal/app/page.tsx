@@ -1,41 +1,26 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { AppItem } from "./data/apps";
 import AppGrid from "./components/AppGrid";
 import SearchBar from "./components/SearchBar";
 import CategoryTabs from "./components/CategoryTabs";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
-import { recommendationApi, categoryApi } from "@/apis";
-import { Category } from "@/apis/types";
+import { useRecommendations, useCategories } from "@/hooks";
 
 export default function Home() {
   const t = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [apps, setApps] = useState<AppItem[]>([]);
-  const [categories, setCategories] = useState<string[]>(["All"]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [appsRes, categoriesRes] = await Promise.all([
-          recommendationApi.getAll(),
-          categoryApi.getAll()
-        ]);
-        setApps(appsRes.data);
-        setCategories(["All", ...categoriesRes.data.map((c: Category) => c.name)]);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { recommendations: apps, loading: appsLoading } = useRecommendations();
+  const { categories: categoryList, loading: categoriesLoading } = useCategories();
 
-    fetchData();
-  }, []);
+  const categories = useMemo(() => {
+    return ["All", ...categoryList.map(c => c.name)];
+  }, [categoryList]);
+
+  const loading = appsLoading || categoriesLoading;
 
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {

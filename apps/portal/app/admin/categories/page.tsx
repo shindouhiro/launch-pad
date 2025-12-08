@@ -64,7 +64,7 @@ export default function CategoriesPage() {
     {
       title: t("actions"),
       key: "actions",
-      render: (_: any, record: Category) => (
+      render: (_: unknown, record: Category) => (
         <div className="flex gap-2">
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Popconfirm

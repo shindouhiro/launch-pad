@@ -29,8 +29,8 @@ export function useImageGroups(options: UseImageGroupsOptions = {}) {
     });
 
     if (!response.ok) throw new Error('Upload failed');
-    const result = await response.json();
-    return result.data.map((item: any) => item.url);
+    const result = await response.json() as { data: Array<{ url: string }> };
+    return result.data.map((item) => item.url);
   };
 
   const handleGroupUpload = async (groupIndex: number, file: File) => {

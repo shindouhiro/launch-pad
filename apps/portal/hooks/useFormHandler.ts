@@ -8,7 +8,7 @@ export function useFormHandler() {
     form.resetFields();
   }, [form]);
 
-  const setFormValues = useCallback((values: any) => {
+  const setFormValues = useCallback((values: Record<string, unknown> | object) => {
     form.setFieldsValue(values);
   }, [form]);
 

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useMemo } from "react";
-import { AppItem } from "./data/apps";
 import AppGrid from "./components/AppGrid";
 import SearchBar from "./components/SearchBar";
 import CategoryTabs from "./components/CategoryTabs";

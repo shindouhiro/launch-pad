@@ -5,7 +5,7 @@ import { message } from 'antd';
 
 interface UseRecommendationsOptions {
   autoFetch?: boolean;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }
 
 export function useRecommendations(options: UseRecommendationsOptions = {}) {
@@ -20,8 +20,9 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
       setRecommendations(res.data);
       return res.data;
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
       if (onError) {
-        onError(error);
+        onError(err);
       } else {
         message.error('Failed to fetch recommendations');
       }

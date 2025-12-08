@@ -5,7 +5,7 @@ import { message } from 'antd';
 
 interface UseCategoriesOptions {
   autoFetch?: boolean;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }
 
 export function useCategories(options: UseCategoriesOptions = {}) {
@@ -20,8 +20,9 @@ export function useCategories(options: UseCategoriesOptions = {}) {
       setCategories(res.data);
       return res.data;
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
       if (onError) {
-        onError(error);
+        onError(err);
       } else {
         message.error('Failed to fetch categories');
       }

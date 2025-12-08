@@ -113,7 +113,7 @@ async function request<T = unknown>(
     clearTimeout(timeoutId);
 
     // 解析响应
-    let responseData: any;
+    let responseData: unknown;
     const contentType = response.headers.get('content-type');
 
     if (contentType?.includes('application/json')) {
@@ -124,8 +124,9 @@ async function request<T = unknown>(
 
     // 检查响应状态
     if (!response.ok) {
+      const errorData = responseData as { message?: string };
       throw new ApiError(
-        responseData?.message || `HTTP Error: ${response.status}`,
+        errorData?.message || `HTTP Error: ${response.status}`,
         response.status,
         response.statusText,
         responseData
@@ -133,7 +134,7 @@ async function request<T = unknown>(
     }
 
     return {
-      data: responseData,
+      data: responseData as T,
       status: response.status,
       statusText: response.statusText,
     };
@@ -162,19 +163,19 @@ const http = {
   /**
    * GET 请求
    */
-  get: <T = any>(url: string, config?: RequestConfig) =>
+  get: <T = unknown>(url: string, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'GET' }),
 
   /**
    * POST 请求
    */
-  post: <T = any>(url: string, data?: any, config?: RequestConfig) =>
+  post: <T = unknown>(url: string, data?: unknown, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'POST', data }),
 
   /**
    * PUT 请求
    */
-  put: <T = any>(url: string, data?: any, config?: RequestConfig) =>
+  put: <T = unknown>(url: string, data?: unknown, config?: RequestConfig) =>
     request<T>(url, { ...config, method: 'PUT', data }),
 
   /**

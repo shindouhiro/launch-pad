@@ -28,7 +28,7 @@ export default function CategoriesPage() {
       await categoryApi.delete(id);
       message.success(t("deleteSuccess"));
       fetchCategories();
-    } catch (_error) {
+    } catch {
       message.error(t("operationFailed"));
     }
   };
@@ -45,7 +45,7 @@ export default function CategoriesPage() {
       }
       modal.close();
       fetchCategories();
-    } catch (_error) {
+    } catch {
       message.error(t("operationFailed"));
     }
   };

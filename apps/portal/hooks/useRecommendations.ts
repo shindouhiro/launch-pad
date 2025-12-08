@@ -36,6 +36,7 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
     if (autoFetch) {
       fetchRecommendations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFetch]);
 
   return {

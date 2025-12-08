@@ -36,6 +36,7 @@ export function useCategories(options: UseCategoriesOptions = {}) {
     if (autoFetch) {
       fetchCategories();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFetch]);
 
   return {

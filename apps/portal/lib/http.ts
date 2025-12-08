@@ -84,6 +84,14 @@ async function request<T = any>(
     ...restConfig,
   };
 
+  // 自动添加 JWT token（如果存在）
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      (requestConfig.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   // 添加请求体
   if (data) {
     if (data instanceof FormData) {

@@ -1,12 +1,11 @@
 "use client";
 
-import { Category } from "../data/apps";
 import { useTranslations } from "next-intl";
 
 interface CategoryTabsProps {
-  categories: Category[];
-  selectedCategory: Category;
-  onSelectCategory: (category: Category) => void;
+  categories: string[];
+  selectedCategory: string;
+  onSelectCategory: (category: string) => void;
 }
 
 export default function CategoryTabs({
@@ -16,9 +15,12 @@ export default function CategoryTabs({
 }: CategoryTabsProps) {
   const t = useTranslations('common');
 
-  const getCategoryLabel = (category: Category) => {
-    const key = category.toLowerCase() as 'all' | 'productivity' | 'development' | 'social' | 'entertainment';
-    return t(key);
+  const getCategoryLabel = (category: string) => {
+    // Only translate "All", show other categories as-is
+    if (category.toLowerCase() === 'all') {
+      return t('all');
+    }
+    return category;
   };
 
   return (

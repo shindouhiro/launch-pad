@@ -26,7 +26,8 @@
     "loginFailed": "登录失败，请检查您的凭据。",
     "loginError": "发生错误，请重试。",
     "logout": "退出登录",
-    "recommendations": "推荐管理"
+    "recommendations": "推荐管理",
+    "categories": "分类管理"
   },
   "recommendations": {
     "title": "推荐管理",
@@ -57,5 +58,24 @@
     "updateSuccess": "更新成功",
     "createSuccess": "创建成功",
     "saveFailed": "保存失败"
+  },
+  "categories": {
+    "title": "分类管理",
+    "addCategory": "添加分类",
+    "editCategory": "编辑分类",
+    "deleteCategory": "删除分类",
+    "deleteConfirm": "确定要删除这个分类吗？",
+    "yes": "是",
+    "no": "否",
+    "name": "名称",
+    "sortOrder": "排序",
+    "actions": "操作",
+    "namePlaceholder": "输入分类名称",
+    "nameRequired": "请输入分类名称！",
+    "createSuccess": "创建成功",
+    "updateSuccess": "更新成功",
+    "deleteSuccess": "删除成功",
+    "operationFailed": "操作失败",
+    "fetchFailed": "获取数据失败"
   }
 }

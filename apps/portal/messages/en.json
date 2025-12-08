@@ -26,7 +26,8 @@
     "loginFailed": "Login failed. Please check your credentials.",
     "loginError": "An error occurred. Please try again.",
     "logout": "Logout",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "categories": "Categories"
   },
   "recommendations": {
     "title": "Recommendation Management",
@@ -57,5 +58,24 @@
     "updateSuccess": "Updated successfully",
     "createSuccess": "Created successfully",
     "saveFailed": "Save failed"
+  },
+  "categories": {
+    "title": "Category Management",
+    "addCategory": "Add Category",
+    "editCategory": "Edit Category",
+    "deleteCategory": "Delete Category",
+    "deleteConfirm": "Are you sure to delete this category?",
+    "yes": "Yes",
+    "no": "No",
+    "name": "Name",
+    "sortOrder": "Sort Order",
+    "actions": "Actions",
+    "namePlaceholder": "Enter category name",
+    "nameRequired": "Please input category name!",
+    "createSuccess": "Created successfully",
+    "updateSuccess": "Updated successfully",
+    "deleteSuccess": "Deleted successfully",
+    "operationFailed": "Operation failed",
+    "fetchFailed": "Failed to fetch data"
   }
 }

@@ -5,8 +5,10 @@ import { Table, Button, Modal, Form, Input, InputNumber, message, Popconfirm } f
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { categoryApi } from "@/apis";
 import { Category } from "@/apis/types";
+import { useTranslations } from "next-intl";
 
 export default function CategoriesPage() {
+  const t = useTranslations("categories");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,7 +21,7 @@ export default function CategoriesPage() {
       const res = await categoryApi.getAll();
       setCategories(res.data);
     } catch (error) {
-      message.error("Failed to fetch categories");
+      message.error(t("fetchFailed"));
     } finally {
       setLoading(false);
     }
@@ -44,10 +46,10 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string) => {
     try {
       await categoryApi.delete(id);
-      message.success("Category deleted successfully");
+      message.success(t("deleteSuccess"));
       fetchCategories();
     } catch (error) {
-      message.error("Failed to delete category");
+      message.error(t("operationFailed"));
     }
   };
 
@@ -56,41 +58,41 @@ export default function CategoriesPage() {
       const values = await form.validateFields();
       if (editingCategory) {
         await categoryApi.update(editingCategory.id, values);
-        message.success("Category updated successfully");
+        message.success(t("updateSuccess"));
       } else {
         await categoryApi.create(values);
-        message.success("Category created successfully");
+        message.success(t("createSuccess"));
       }
       setIsModalOpen(false);
       fetchCategories();
     } catch (error) {
-      message.error("Operation failed");
+      message.error(t("operationFailed"));
     }
   };
 
   const columns = [
     {
-      title: "Name",
+      title: t("name"),
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Sort Order",
+      title: t("sortOrder"),
       dataIndex: "sortOrder",
       key: "sortOrder",
     },
     {
-      title: "Actions",
+      title: t("actions"),
       key: "actions",
       render: (_: any, record: Category) => (
         <div className="flex gap-2">
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Popconfirm
-            title="Delete the category"
-            description="Are you sure to delete this category?"
+            title={t("deleteCategory")}
+            description={t("deleteConfirm")}
             onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            okText={t("yes")}
+            cancelText={t("no")}
           >
             <Button icon={<DeleteOutlined />} danger />
           </Popconfirm>
@@ -102,9 +104,9 @@ export default function CategoriesPage() {
   return (
     <div className="p-6">
       <div className="mb-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Category Management</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          Add Category
+          {t("addCategory")}
         </Button>
       </div>
 
@@ -116,7 +118,7 @@ export default function CategoriesPage() {
       />
 
       <Modal
-        title={editingCategory ? "Edit Category" : "Add Category"}
+        title={editingCategory ? t("editCategory") : t("addCategory")}
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={() => setIsModalOpen(false)}
@@ -124,14 +126,14 @@ export default function CategoriesPage() {
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please input category name!" }]}
+            label={t("name")}
+            rules={[{ required: true, message: t("nameRequired") }]}
           >
-            <Input />
+            <Input placeholder={t("namePlaceholder")} />
           </Form.Item>
           <Form.Item
             name="sortOrder"
-            label="Sort Order"
+            label={t("sortOrder")}
             initialValue={0}
           >
             <InputNumber className="w-full" />

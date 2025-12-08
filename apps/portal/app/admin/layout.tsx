@@ -62,6 +62,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           name: t('recommendations'),
           icon: "smile",
         },
+        {
+          path: "/admin/categories",
+          name: t('categories'),
+          icon: "appstore",
+        },
       ]}
       menuItemRender={(item, dom) => (
         <Link href={item.path || "/admin"}>{dom}</Link>

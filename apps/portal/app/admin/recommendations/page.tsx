@@ -12,20 +12,21 @@ import {
   App,
   Upload,
   Image,
-  Radio,
   Space,
   Tag,
+  Card,
+  Row,
+  Col,
+  Divider,
 } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UploadOutlined,
-  StarOutlined,
-  StarFilled,
 } from "@ant-design/icons";
-import type { UploadFile, UploadProps } from "antd";
 import { useTranslations } from "next-intl";
+import { categoryApi } from "@/apis";
+import { Category } from "@/apis/types";
 
 type RecommendationItem = {
   id: string;
@@ -33,23 +34,25 @@ type RecommendationItem = {
   url: string;
   icon: string;
   category: string;
+  categoryId?: string;
   description: string;
   images?: string[];
   coverImage?: string;
+  imageGroups?: { name: string; images: string[] }[];
 };
 
 export default function RecommendationsPage() {
   const { message } = App.useApp();
   const t = useTranslations("recommendations");
-  const tCommon = useTranslations("common");
   const [data, setData] = useState<RecommendationItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RecommendationItem | null>(null);
   const [form] = Form.useForm();
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [coverImage, setCoverImage] = useState<string>("");
+
+  // Image Groups State
+  const [imageGroups, setImageGroups] = useState<{ name: string; images: string[] }[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -67,16 +70,24 @@ export default function RecommendationsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await categoryApi.getAll();
+      setCategories(res.data);
+    } catch (error) {
+      console.error("Failed to fetch categories");
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchCategories();
   }, []);
 
   const handleAdd = () => {
     setEditingRecord(null);
     form.resetFields();
-    setFileList([]);
-    setExistingImages([]);
-    setCoverImage("");
+    setImageGroups([]);
     setModalVisible(true);
   };
 
@@ -86,12 +97,15 @@ export default function RecommendationsPage() {
       title: record.title,
       url: record.url,
       icon: record.icon,
-      category: record.category,
+      categoryId: record.categoryId || (categories.find(c => c.name === record.category)?.id),
       description: record.description,
     });
-    setFileList([]);
-    setExistingImages(record.images || []);
-    setCoverImage(record.coverImage || (record.images && record.images[0]) || "");
+
+    let groups = record.imageGroups || [];
+    if (groups.length === 0 && record.images && record.images.length > 0) {
+      groups = [{ name: "Default", images: record.images }];
+    }
+    setImageGroups(groups);
     setModalVisible(true);
   };
 
@@ -111,41 +125,60 @@ export default function RecommendationsPage() {
     }
   };
 
-  const handleRemoveExistingImage = (url: string) => {
-    setExistingImages(existingImages.filter((img) => img !== url));
-    if (coverImage === url) {
-      const remaining = existingImages.filter((img) => img !== url);
-      setCoverImage(remaining[0] || "");
-    }
+  const uploadFiles = async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_BASE_URL}/upload/multiple`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Upload failed");
+    const result = await response.json();
+    return result.data.map((item: any) => item.url);
   };
 
-  const uploadProps: UploadProps = {
-    multiple: true,
-    maxCount: 10,
-    listType: "picture-card",
-    fileList: fileList,
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        message.error("只能上传图片文件！");
-        return false;
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        message.error("图片大小不能超过 5MB！");
-        return false;
-      }
-      return false; // 阻止自动上传
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setFileList(newFileList);
-    },
-    onRemove: (file) => {
-      const index = fileList.indexOf(file);
-      const newFileList = fileList.slice();
-      newFileList.splice(index, 1);
-      setFileList(newFileList);
-    },
+  const handleGroupUpload = async (groupIndex: number, file: File) => {
+    try {
+      setUploading(true);
+      const urls = await uploadFiles([file]);
+      const newGroups = [...imageGroups];
+      newGroups[groupIndex].images = [...newGroups[groupIndex].images, ...urls];
+      setImageGroups(newGroups);
+      message.success("上传成功");
+    } catch (error) {
+      message.error("上传失败");
+    } finally {
+      setUploading(false);
+    }
+    return false;
+  };
+
+  const handleRemoveImage = (groupIndex: number, imageUrl: string) => {
+    const newGroups = [...imageGroups];
+    newGroups[groupIndex].images = newGroups[groupIndex].images.filter(url => url !== imageUrl);
+    setImageGroups(newGroups);
+  };
+
+  const addGroup = () => {
+    setImageGroups([...imageGroups, { name: `Group ${imageGroups.length + 1}`, images: [] }]);
+  };
+
+  const removeGroup = (index: number) => {
+    const newGroups = [...imageGroups];
+    newGroups.splice(index, 1);
+    setImageGroups(newGroups);
+  };
+
+  const updateGroupName = (index: number, name: string) => {
+    const newGroups = [...imageGroups];
+    newGroups[index].name = name;
+    setImageGroups(newGroups);
   };
 
   const handleSubmit = async (values: any) => {
@@ -153,67 +186,39 @@ export default function RecommendationsPage() {
     setUploading(true);
 
     try {
-      const formData = new FormData();
+      const allImages = imageGroups.flatMap(g => g.images);
+      const coverImage = allImages.length > 0 ? allImages[0] : undefined;
+      const selectedCategory = categories.find(c => c.id === values.categoryId);
 
-      // 添加文本字段
-      Object.keys(values).forEach((key) => {
-        if (values[key] !== undefined && values[key] !== null) {
-          formData.append(key, values[key]);
-        }
+      const payload = {
+        ...values,
+        category: selectedCategory?.name || "Unknown",
+        categoryId: values.categoryId,
+        imageGroups,
+        images: allImages,
+        coverImage: editingRecord?.coverImage || coverImage,
+      };
+
+      const url = editingRecord
+        ? `${API_BASE_URL}/recommendations/${editingRecord.id}`
+        : `${API_BASE_URL}/recommendations`;
+
+      const method = editingRecord ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
 
-      // 添加新上传的图片
-      fileList.forEach((file) => {
-        if (file.originFileObj) {
-          formData.append("images", file.originFileObj);
-        }
-      });
+      if (!response.ok) throw new Error("Operation failed");
 
-      // 如果是编辑模式，需要处理现有图片
-      if (editingRecord) {
-        // 将保留的现有图片添加到表单数据
-        formData.append("existingImages", JSON.stringify(existingImages));
-
-        // 设置封面图片
-        if (coverImage) {
-          formData.append("coverImage", coverImage);
-        }
-
-        // 更新
-        const response = await fetch(`${API_BASE_URL}/recommendations/${editingRecord.id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error("Update failed");
-        message.success(t("updateSuccess"));
-      } else {
-        // 创建 - 设置第一张图片为封面
-        if (fileList.length > 0) {
-          // 封面将在后端自动设置为第一张上传的图片
-        }
-
-        const response = await fetch(`${API_BASE_URL}/recommendations`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error("Create failed");
-        message.success(t("createSuccess"));
-      }
-
+      message.success(editingRecord ? t("updateSuccess") : t("createSuccess"));
       setModalVisible(false);
       fetchData();
-      form.resetFields();
-      setFileList([]);
-      setExistingImages([]);
-      setCoverImage("");
     } catch (error) {
       message.error(t("saveFailed"));
       console.error(error);
@@ -257,26 +262,9 @@ export default function RecommendationsPage() {
       },
     },
     {
-      title: t("icon"),
-      dataIndex: "icon",
-      key: "icon",
-      width: 80,
-      render: (icon: string) => <span style={{ fontSize: "24px" }}>{icon}</span>,
-    },
-    {
       title: t("titleField"),
       dataIndex: "title",
       key: "title",
-    },
-    {
-      title: t("url"),
-      dataIndex: "url",
-      key: "url",
-      render: (url: string) => (
-        <a href={url} target="_blank" rel="noopener noreferrer">
-          {url}
-        </a>
-      ),
     },
     {
       title: t("category"),
@@ -285,18 +273,11 @@ export default function RecommendationsPage() {
       render: (category: string) => <Tag color="blue">{category}</Tag>,
     },
     {
-      title: "图片",
-      dataIndex: "images",
-      key: "images",
-      render: (images: string[]) => (
-        <span>{images && images.length > 0 ? `${images.length} 张` : "无"}</span>
+      title: "图片组",
+      key: "groups",
+      render: (_: any, record: RecommendationItem) => (
+        <span>{record.imageGroups?.length || 0} 组</span>
       ),
-    },
-    {
-      title: t("description"),
-      dataIndex: "description",
-      key: "description",
-      ellipsis: true,
     },
     {
       title: t("actions"),
@@ -328,14 +309,7 @@ export default function RecommendationsPage() {
 
   return (
     <div style={{ padding: "24px" }}>
-      <div
-        style={{
-          marginBottom: "16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2 style={{ margin: 0 }}>{t("title")}</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           {t("new")}
@@ -355,138 +329,152 @@ export default function RecommendationsPage() {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
-        width={800}
+        width={900}
         confirmLoading={uploading}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item
-            name="title"
-            label={t("titleField")}
-            rules={[{ required: true, message: t("titleRequired") }]}
-          >
-            <Input placeholder={t("titlePlaceholder")} />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="title"
+                label={t("titleField")}
+                rules={[{ required: true, message: t("titleRequired") }]}
+              >
+                <Input placeholder={t("titlePlaceholder")} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="categoryId"
+                label={t("category")}
+                rules={[{ required: true, message: t("categoryRequired") }]}
+              >
+                <Select placeholder={t("categoryPlaceholder")}>
+                  {categories.map((category) => (
+                    <Select.Option key={category.id} value={category.id}>
+                      {category.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="url"
-            label={t("url")}
-            rules={[
-              { required: true, message: t("urlRequired") },
-              { type: "url", message: t("urlInvalid") },
-            ]}
-          >
-            <Input placeholder={t("urlPlaceholder")} />
-          </Form.Item>
-
-          <Form.Item
-            name="category"
-            label={t("category")}
-            rules={[{ required: true, message: t("categoryRequired") }]}
-          >
-            <Select placeholder={t("categoryPlaceholder")}>
-              <Select.Option value="Development">{tCommon("development")}</Select.Option>
-              <Select.Option value="Productivity">{tCommon("productivity")}</Select.Option>
-              <Select.Option value="Social">{tCommon("social")}</Select.Option>
-              <Select.Option value="Entertainment">{tCommon("entertainment")}</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="icon" label={t("icon")}>
-            <Input placeholder={t("iconPlaceholder")} maxLength={2} />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="url"
+                label={t("url")}
+                rules={[
+                  { required: true, message: t("urlRequired") },
+                  { type: "url", message: t("urlInvalid") },
+                ]}
+              >
+                <Input placeholder={t("urlPlaceholder")} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="icon" label={t("icon")}>
+                <Input placeholder={t("iconPlaceholder")} maxLength={2} />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item name="description" label={t("description")}>
             <Input.TextArea rows={3} placeholder={t("descriptionPlaceholder")} />
           </Form.Item>
 
-          {/* 现有图片 */}
-          {existingImages.length > 0 && (
-            <Form.Item label="现有图片">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {existingImages.map((url, index) => (
-                  <div
-                    key={url}
-                    style={{
-                      position: "relative",
-                      width: "104px",
-                      height: "104px",
-                      border: coverImage === url ? "2px solid #1890ff" : "1px solid #d9d9d9",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Image
-                      src={url}
-                      alt={`image-${index}`}
-                      width={100}
-                      height={100}
-                      style={{ objectFit: "cover" }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        left: 0,
-                        bottom: 0,
-                        background: "rgba(0,0,0,0.5)",
-                        opacity: 0,
-                        transition: "opacity 0.3s",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                      }}
-                      className="image-overlay"
-                    >
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={coverImage === url ? <StarFilled /> : <StarOutlined />}
-                        onClick={() => setCoverImage(url)}
-                        style={{ color: "#fff" }}
-                        title="设为封面"
-                      />
-                      <Button
-                        type="text"
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemoveExistingImage(url)}
-                        style={{ color: "#fff" }}
-                        title="删除"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <style jsx global>{`
-                .image-overlay:hover {
-                  opacity: 1 !important;
-                }
-              `}</style>
-            </Form.Item>
-          )}
+          <Divider>图片组管理</Divider>
 
-          {/* 上传新图片 */}
-          <Form.Item label="上传图片">
-            <Upload {...uploadProps}>
-              {fileList.length >= 10 ? null : (
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>上传</div>
+          <div className="flex flex-col gap-4">
+            {imageGroups.map((group, index) => (
+              <Card
+                key={index}
+                size="small"
+                title={
+                  <Input
+                    value={group.name}
+                    onChange={(e) => updateGroupName(index, e.target.value)}
+                    style={{ width: 200 }}
+                    placeholder="分组名称"
+                  />
+                }
+                extra={
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => removeGroup(index)}
+                  >
+                    删除分组
+                  </Button>
+                }
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {group.images.map((url, imgIndex) => (
+                    <div
+                      key={imgIndex}
+                      style={{
+                        position: "relative",
+                        width: "100px",
+                        height: "100px",
+                        border: "1px solid #d9d9d9",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Image
+                        src={url}
+                        alt={`img-${imgIndex}`}
+                        width={100}
+                        height={100}
+                        style={{ objectFit: "cover" }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0, right: 0,
+                          background: "rgba(0,0,0,0.5)",
+                          cursor: "pointer",
+                          padding: "4px",
+                          borderBottomLeftRadius: "4px"
+                        }}
+                        onClick={() => handleRemoveImage(index, url)}
+                      >
+                        <DeleteOutlined style={{ color: "white" }} />
+                      </div>
+                    </div>
+                  ))}
+
+                  <Upload
+                    showUploadList={false}
+                    beforeUpload={(file) => handleGroupUpload(index, file)}
+                    multiple
+                  >
+                    <div style={{
+                      width: "100px",
+                      height: "100px",
+                      border: "1px dashed #d9d9d9",
+                      borderRadius: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      background: "#fafafa"
+                    }}>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8, fontSize: 12 }}>上传</div>
+                    </div>
+                  </Upload>
                 </div>
-              )}
-            </Upload>
-            <div style={{ marginTop: "8px", color: "#999", fontSize: "12px" }}>
-              支持上传最多 10 张图片，单张图片不超过 5MB
-              {existingImages.length === 0 && fileList.length > 0 && (
-                <div style={{ marginTop: "4px", color: "#1890ff" }}>
-                  第一张图片将自动设为封面
-                </div>
-              )}
-            </div>
-          </Form.Item>
+              </Card>
+            ))}
+
+            <Button type="dashed" onClick={addGroup} icon={<PlusOutlined />} block>
+              添加图片分组
+            </Button>
+          </div>
         </Form>
       </Modal>
     </div>

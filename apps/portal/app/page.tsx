@@ -1,32 +1,41 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { AppItem, Category } from "./data/apps";
+import { AppItem } from "./data/apps";
 import AppGrid from "./components/AppGrid";
 import SearchBar from "./components/SearchBar";
 import CategoryTabs from "./components/CategoryTabs";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
+import { recommendationApi, categoryApi } from "@/apis";
+import { Category } from "@/apis/types";
 
 export default function Home() {
   const t = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<Category>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [apps, setApps] = useState<AppItem[]>([]);
+  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:3001/recommendations")
-      .then((res) => res.json())
-      .then((data) => setApps(data))
-      .catch((err) => console.error("Failed to fetch apps", err));
-  }, []);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [appsRes, categoriesRes] = await Promise.all([
+          recommendationApi.getAll(),
+          categoryApi.getAll()
+        ]);
+        setApps(appsRes.data);
+        setCategories(["All", ...categoriesRes.data.map((c: Category) => c.name)]);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const categories: Category[] = [
-    "All",
-    "Productivity",
-    "Development",
-    "Social",
-    "Entertainment",
-  ];
+    fetchData();
+  }, []);
 
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {
@@ -40,14 +49,14 @@ export default function Home() {
   }, [searchTerm, selectedCategory, apps]);
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-black text-white selection:bg-purple-500/30">
+    <main className="relative min-h-screen w-full overflow-hidden bg-slate-950 text-slate-100 selection:bg-rose-500/30 selection:text-rose-200">
       {/* Dynamic Background */}
-      <div className="fixed inset-0 -z-10 h-full w-full bg-[#050505]">
-        <div className="absolute -left-[10%] -top-[10%] h-[500px] w-[500px] rounded-full bg-purple-600/20 blur-[120px] animate-pulse-slow" />
-        <div className="absolute -right-[10%] top-[20%] h-[400px] w-[400px] rounded-full bg-blue-600/20 blur-[100px] animate-pulse-slow [animation-delay:2s]" />
-        <div className="absolute bottom-[10%] left-[20%] h-[300px] w-[300px] rounded-full bg-indigo-600/20 blur-[80px] animate-pulse-slow [animation-delay:4s]" />
+      <div className="fixed inset-0 -z-10 h-full w-full bg-slate-950">
+        <div className="absolute -left-[10%] -top-[10%] h-[500px] w-[500px] rounded-full bg-rose-500/20 blur-[120px] animate-pulse-slow" />
+        <div className="absolute -right-[10%] top-[20%] h-[400px] w-[400px] rounded-full bg-amber-500/20 blur-[100px] animate-pulse-slow [animation-delay:2s]" />
+        <div className="absolute bottom-[10%] left-[20%] h-[300px] w-[300px] rounded-full bg-violet-500/20 blur-[80px] animate-pulse-slow [animation-delay:4s]" />
 
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
 
       <div className="container mx-auto flex min-h-screen flex-col items-center px-4 py-24 relative z-10">
@@ -57,11 +66,11 @@ export default function Home() {
               <LanguageSwitcher />
             </div>
 
-            <h1 className="relative bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-6xl font-bold tracking-tight text-transparent sm:text-7xl drop-shadow-sm">
+            <h1 className="relative bg-gradient-to-br from-white via-rose-200 to-violet-200 bg-clip-text text-6xl font-bold tracking-tight text-transparent sm:text-7xl drop-shadow-sm">
               {t('home.title')}
-              <div className="absolute -inset-1 blur-2xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 -z-10 opacity-50" />
+              <div className="absolute -inset-1 blur-3xl bg-gradient-to-r from-rose-500/20 to-amber-500/20 -z-10 opacity-50" />
             </h1>
-            <p className="max-w-2xl text-lg text-zinc-400/80 leading-relaxed font-light">
+            <p className="max-w-2xl text-lg text-slate-400 leading-relaxed font-light">
               {t('home.subtitle')}
             </p>
           </div>

@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  NotFoundException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -37,6 +38,18 @@ export class RecommendationsController {
   @ApiResponse({ status: 200, description: '成功返回推荐列表', type: [RecommendationEntity] })
   async findAll(): Promise<RecommendationEntity[]> {
     return this.recommendationsService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: '获取推荐详情', description: '根据ID获取推荐详情' })
+  @ApiResponse({ status: 200, description: '成功返回推荐详情', type: RecommendationEntity })
+  @ApiResponse({ status: 404, description: '推荐不存在' })
+  async findOne(@Param('id') id: string): Promise<RecommendationEntity> {
+    const recommendation = await this.recommendationsService.findOne(id);
+    if (!recommendation) {
+      throw new NotFoundException('Recommendation not found');
+    }
+    return recommendation;
   }
 
   @UseGuards(AuthGuard('jwt'))

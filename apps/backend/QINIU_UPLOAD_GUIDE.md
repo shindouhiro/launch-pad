@@ -13,7 +13,7 @@
 ```env
 QINIU_ACCESS_KEY=dC3A-WosVq6wbQOJPTfY-DQff08hkcXj_KK8byKI
 QINIU_SECRET_KEY=2sCgq3fS_ZSykVZ3IcpcBN-Mfow09utOb8_mEQ0U
-QINIU_BUCKET=-launch-pad
+QINIU_BUCKET=launch-pad
 QINIU_DOMAIN=http://t6mfwj8xf.hn-bkt.clouddn.com
 QINIU_ZONE=z2
 ```

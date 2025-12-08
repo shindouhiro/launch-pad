@@ -82,7 +82,12 @@ export class QiniuService {
             const url = `${this.domain}/${body.key}`;
             resolve({ url, key: body.key });
           } else {
-            reject(new Error(`Upload failed with status ${info.statusCode}`));
+            console.error(`Qiniu upload failed. Status: ${info.statusCode}, Bucket: ${this.bucket}`);
+            if (info.statusCode === 631) {
+              reject(new Error(`Bucket "${this.bucket}" does not exist. Please check QINIU_BUCKET in .env`));
+            } else {
+              reject(new Error(`Upload failed with status ${info.statusCode}`));
+            }
           }
         },
       );
@@ -154,5 +159,17 @@ export class QiniuService {
    */
   extractKeyFromUrl(url: string): string {
     return url.replace(`${this.domain}/`, '');
+  }
+
+  /**
+   * 获取私有空间下载链接
+   */
+  getPrivateDownloadUrl(url: string): string {
+    if (!url.startsWith(this.domain)) {
+      return url;
+    }
+    const key = this.extractKeyFromUrl(url);
+    const deadline = Math.floor(Date.now() / 1000) + 3600; // 1小时有效期
+    return this.bucketManager.privateDownloadUrl(this.domain, key, deadline);
   }
 }

@@ -5,6 +5,7 @@ export class CreateRecommendationDto {
   category: string;
   description: string;
   images?: string[];
+  imageGroups?: { name: string; images: string[] }[];
 }
 
 export class UpdateRecommendationDto {
@@ -14,4 +15,5 @@ export class UpdateRecommendationDto {
   category?: string;
   description?: string;
   images?: string[];
+  imageGroups?: { name: string; images: string[] }[];
 }

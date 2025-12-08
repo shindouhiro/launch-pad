@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CategoryEntity } from '../categories/category.entity';
 
 @Entity('recommendations')
 export class RecommendationEntity {
@@ -20,8 +21,16 @@ export class RecommendationEntity {
   icon: string;
 
   @ApiProperty({ description: '分类', example: 'Development' })
-  @Column()
+  @Column({ nullable: true })
   category: string;
+
+  @ApiPropertyOptional({ description: '关联分类' })
+  @ManyToOne(() => CategoryEntity, (category) => category.recommendations, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'categoryId' })
+  categoryRelation: CategoryEntity;
+
+  @Column({ nullable: true })
+  categoryId: string;
 
   @ApiProperty({ description: '描述', example: 'Code hosting and collaboration' })
   @Column({ type: 'text', nullable: true })
@@ -45,6 +54,17 @@ export class RecommendationEntity {
   })
   @Column({ nullable: true })
   coverImage: string;
+
+  @ApiPropertyOptional({
+    description: '图片组',
+    type: 'array',
+    example: [
+      { name: 'Desktop', images: ['url1', 'url2'] },
+      { name: 'Mobile', images: ['url3', 'url4'] }
+    ]
+  })
+  @Column('jsonb', { nullable: true })
+  imageGroups: { name: string; images: string[] }[];
 
   @CreateDateColumn()
   createdAt: Date;

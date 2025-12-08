@@ -74,6 +74,8 @@ export class UploadController {
 
     try {
       const result = await this.qiniuService.uploadFile(file);
+      // Sign the URL immediately for preview
+      result.url = this.qiniuService.getPrivateDownloadUrl(result.url);
       return {
         success: true,
         data: result,
@@ -135,6 +137,10 @@ export class UploadController {
 
     try {
       const results = await this.qiniuService.uploadFiles(files);
+      // Sign the URLs immediately for preview
+      results.forEach(result => {
+        result.url = this.qiniuService.getPrivateDownloadUrl(result.url);
+      });
       return {
         success: true,
         data: results,

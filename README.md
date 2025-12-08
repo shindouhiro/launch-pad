@@ -26,6 +26,7 @@
 + ✅ Swagger API 文档
 + ✅ Docker 容器化部署
 + ✅ GitHub Actions CI/CD
++ ✅ 统一 API 封装和代理转发
 
 ## 快速开始
 

@@ -66,7 +66,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:3001
+      NODE_ENV: production
+      # 服务器端 API URL（用于 rewrites，可以使用容器名）
+      SERVER_API_URL: http://backend:3001
+      # 客户端不需要 NEXT_PUBLIC_API_URL，因为会通过 /api 代理访问
+      NEXT_TELEMETRY_DISABLED: "1"
     depends_on:
       - backend
 

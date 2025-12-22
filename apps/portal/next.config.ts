@@ -22,12 +22,16 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    // 使用 SERVER_API_URL 用于服务器端代理（Docker 内部网络）
+    // 使用 NEXT_PUBLIC_API_URL 作为后备（开发环境）
+    const apiUrl = process.env.SERVER_API_URL
+      || process.env.NEXT_PUBLIC_API_URL
+      || 'http://localhost:3001';
+
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL
-          ? `${process.env.NEXT_PUBLIC_API_URL}/:path*`
-          : 'http://localhost:3001/:path*',
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },

@@ -7,6 +7,7 @@ import { Recommendation } from "@/apis/types";
 import { Button, Spin, Tabs, Image } from "antd";
 import { ArrowLeftOutlined, GlobalOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import { ensureHttps } from "@/lib/image-utils";
 
 export default function AppDetailPage() {
   const params = useParams();
@@ -46,7 +47,7 @@ export default function AppDetailPage() {
         {group.images.map((img, i) => (
           <div key={i} className="group relative aspect-[16/10] overflow-hidden rounded-xl bg-slate-800 border border-slate-700/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-rose-500/20 hover:border-rose-500/30">
             <Image
-              src={img}
+              src={ensureHttps(img)}
               alt={`${group.name}-${i}`}
               className="object-cover w-full h-full"
             />
@@ -66,7 +67,7 @@ export default function AppDetailPage() {
           {app.images.map((img, i) => (
             <div key={i} className="group relative aspect-[16/10] overflow-hidden rounded-xl bg-slate-800 border border-slate-700/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-rose-500/20 hover:border-rose-500/30">
               <Image
-                src={img}
+                src={ensureHttps(img)}
                 alt={`gallery-${i}`}
                 className="object-cover w-full h-full"
               />
@@ -84,7 +85,7 @@ export default function AppDetailPage() {
         {/* Background Image with Blur */}
         <div className="absolute inset-0">
           {app.coverImage && (
-            <img src={app.coverImage} className="h-full w-full object-cover opacity-40 blur-2xl scale-110" alt="bg" />
+            <img src={ensureHttps(app.coverImage)} className="h-full w-full object-cover opacity-40 blur-2xl scale-110" alt="bg" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 to-transparent" />

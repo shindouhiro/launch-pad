@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AppItem } from "../data/apps";
+import { ensureHttps } from "@/lib/image-utils";
 
 interface AppCardProps {
   app: AppItem;
@@ -8,7 +9,7 @@ interface AppCardProps {
 
 export default function AppCard({ app }: AppCardProps) {
   const hasCoverImage = app.coverImage || (app.images && app.images.length > 0);
-  const coverImageUrl = app.coverImage || (app.images && app.images[0]);
+  const coverImageUrl = ensureHttps(app.coverImage || (app.images && app.images[0]));
 
   return (
     <Link

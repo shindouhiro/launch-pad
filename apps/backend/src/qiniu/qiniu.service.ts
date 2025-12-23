@@ -155,6 +155,25 @@ export class QiniuService {
   }
 
   /**
+   * 构建完整的 URL
+   * 注意：如果使用七牛云测试域名（*.hn-bkt.clouddn.com），请使用 HTTP
+   * 生产环境请配置自定义域名并使用 HTTPS
+   */
+  private buildUrl(key: string): string {
+    let baseUrl = this.domain;
+
+    // 如果 domain 不包含协议，添加协议
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      // 默认使用 HTTP（七牛云测试域名不支持 HTTPS）
+      // 如果配置了自定义域名，请在 .env 中设置完整 URL，如：
+      // QINIU_DOMAIN=https://cdn.yourdomain.com
+      baseUrl = `http://${baseUrl}`;
+    }
+
+    return `${baseUrl}/${key}`;
+  }
+
+  /**
    * 从URL中提取key
    */
   extractKeyFromUrl(url: string): string {

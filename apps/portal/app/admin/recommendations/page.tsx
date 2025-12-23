@@ -27,6 +27,7 @@ import {
 import { useTranslations } from "next-intl";
 import { categoryApi } from "@/apis";
 import { Category } from "@/apis/types";
+import { ensureHttps } from "@/lib/image-utils";
 
 type RecommendationItem = {
   id: string;
@@ -237,7 +238,7 @@ export default function RecommendationsPage() {
         const imageUrl = coverImage || (record.images && record.images[0]);
         return imageUrl ? (
           <Image
-            src={imageUrl}
+            src={ensureHttps(imageUrl)}
             alt={record.title}
             width={60}
             height={60}
@@ -424,7 +425,7 @@ export default function RecommendationsPage() {
                       }}
                     >
                       <Image
-                        src={url}
+                        src={ensureHttps(url)}
                         alt={`img-${imgIndex}`}
                         width={100}
                         height={100}

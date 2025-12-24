@@ -12,11 +12,7 @@ export const uploadApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return http.upload<UploadResponse>('/upload', formData, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    return http.upload<UploadResponse>('/upload', formData);
   },
 
   /**
@@ -28,20 +24,6 @@ export const uploadApi = {
       formData.append('files', file);
     });
 
-    return http.upload<UploadResponse[]>('/upload/multiple', formData, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    return http.upload<UploadResponse[]>('/upload/multiple', formData);
   },
 };
-
-/**
- * 获取 Token
- */
-function getToken(): string {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || '';
-  }
-  return '';
-}

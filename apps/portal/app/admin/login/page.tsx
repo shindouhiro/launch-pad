@@ -6,6 +6,7 @@ import { Tabs, App } from "antd";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { authApi } from "@/apis";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,24 +15,14 @@ export default function LoginPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
+      const response = await authApi.login(values);
+      const { data } = response;
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.access_token);
-        message.success(t('loginSuccess'));
-        router.push("/admin/recommendations");
-      } else {
-        message.error(t('loginFailed'));
-      }
+      authApi.setToken(data.access_token);
+      message.success(t('loginSuccess'));
+      router.push("/admin/recommendations");
     } catch (error) {
-      message.error(t('loginError'));
+      message.error(t('loginFailed'));
     }
   };
 

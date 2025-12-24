@@ -84,11 +84,16 @@ async function request<T = unknown>(
     ...restConfig,
   };
 
-  // 自动添加 JWT token（如果存在）
+  // 自动添加 JWT token
   if (typeof window !== 'undefined') {
+    const isAuthPath = url.includes('/auth/');
     const token = localStorage.getItem('token');
-    if (token) {
+
+    if (token && !isAuthPath) {
       (requestConfig.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    } else if (isAuthPath) {
+      // 登录/注册接口强制不带 Authorization，防止后端 401 拦截
+      delete (requestConfig.headers as Record<string, string>)['Authorization'];
     }
   }
 
@@ -120,6 +125,17 @@ async function request<T = unknown>(
       responseData = await response.json();
     } else {
       responseData = await response.text();
+    }
+
+    // 统一拦截处理
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        // 如果不是在登录页且未授权，重定向到登录
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
     }
 
     // 检查响应状态

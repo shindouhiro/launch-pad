@@ -46,18 +46,10 @@ export const recommendationApi = {
         formData.append('images', file);
       });
 
-      return http.upload<Recommendation>('/recommendations', formData, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      });
+      return http.upload<Recommendation>('/recommendations', formData);
     }
 
-    return http.post<Recommendation>('/recommendations', data, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    return http.post<Recommendation>('/recommendations', data);
   },
 
   /**
@@ -83,38 +75,16 @@ export const recommendationApi = {
         formData.append('images', file);
       });
 
-      return http.upload<Recommendation>(`/recommendations/${id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      });
+      return http.upload<Recommendation>(`/recommendations/${id}`, formData);
     }
 
-    return http.put<Recommendation>(`/recommendations/${id}`, data, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    return http.put<Recommendation>(`/recommendations/${id}`, data);
   },
 
   /**
    * 删除推荐
    */
   delete: (id: string) => {
-    return http.delete(`/recommendations/${id}`, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    return http.delete(`/recommendations/${id}`);
   },
 };
-
-/**
- * 获取 Token
- */
-function getToken(): string {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || '';
-  }
-  return '';
-}

@@ -25,7 +25,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
-import { categoryApi } from "@/apis";
+import { categoryApi, recommendationApi, uploadApi } from "@/apis";
 import { Category } from "@/apis/types";
 import { ensureHttps } from "@/lib/image-utils";
 
@@ -56,14 +56,12 @@ export default function RecommendationsPage() {
   const [imageGroups, setImageGroups] = useState<{ name: string; images: string[] }[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/recommendations`);
-      const result = await response.json();
-      setData(result);
+      const response = await recommendationApi.getAll();
+      setData(response.data);
     } catch (error) {
       message.error(t("fetchFailed"));
     } finally {
@@ -111,14 +109,8 @@ export default function RecommendationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const token = localStorage.getItem("token");
     try {
-      await fetch(`${API_BASE_URL}/recommendations/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await recommendationApi.delete(id);
       message.success(t("deleteSuccess"));
       fetchData();
     } catch (error) {
@@ -127,21 +119,8 @@ export default function RecommendationsPage() {
   };
 
   const uploadFiles = async (files: File[]) => {
-    const formData = new FormData();
-    files.forEach((file) => formData.append("files", file));
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(`${API_BASE_URL}/upload/multiple`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error("Upload failed");
-    const result = await response.json();
-    return result.data.map((item: any) => item.url);
+    const response = await uploadApi.uploadFiles(files);
+    return response.data.map((item: any) => item.url);
   };
 
   const handleGroupUpload = async (groupIndex: number, file: File) => {
@@ -200,22 +179,11 @@ export default function RecommendationsPage() {
         coverImage: editingRecord?.coverImage || coverImage,
       };
 
-      const url = editingRecord
-        ? `${API_BASE_URL}/recommendations/${editingRecord.id}`
-        : `${API_BASE_URL}/recommendations`;
+      const response = editingRecord
+        ? await recommendationApi.update(editingRecord.id, payload)
+        : await recommendationApi.create(payload);
 
-      const method = editingRecord ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Operation failed");
+      if (!response.data) throw new Error("Operation failed");
 
       message.success(editingRecord ? t("updateSuccess") : t("createSuccess"));
       setModalVisible(false);
